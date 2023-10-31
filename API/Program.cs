@@ -1,5 +1,7 @@
 
+using Common.Interfaces;
 using Data;
+using Logic;
 using Microsoft.EntityFrameworkCore;
 
 namespace API
@@ -18,8 +20,10 @@ namespace API
             builder.Services.AddSwaggerGen();
             builder.Services.AddDbContext<Database>(options =>
                 options.UseSqlite("Data Source=Application.db;"));
+            builder.Services.AddScoped<IUserLogic, UserLogic>();
+            builder.Services.AddScoped<IUserQueries, UserQueries>();
             var app = builder.Build();
-
+            
             var scope = app.Services.CreateScope();
             scope.ServiceProvider.GetRequiredService<Database>().Database.EnsureCreated();
 
