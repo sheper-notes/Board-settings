@@ -2,5 +2,5 @@ namespace API;
 
 public class Class
 {
-    private sbyte Test {  get; set; }
+    private sbyte Test { get; set; }
 }
