@@ -1,8 +1,10 @@
 
 using Common.Interfaces;
 using Data;
-using Logic;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using System.Security.Claims;
 
 namespace API
 {
@@ -20,8 +22,16 @@ namespace API
             builder.Services.AddSwaggerGen();
             builder.Services.AddDbContext<Database>(options =>
                 options.UseSqlite("Data Source=Application.db;"));
-            builder.Services.AddScoped<IUserLogic, UserLogic>();
             builder.Services.AddScoped<IUserQueries, UserQueries>();
+            builder.Services.AddScoped<IBoardQueries, BoardQueries>();
+
+            var domain = $"https://{builder.Configuration["Auth0:Domain"]}/";
+            builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+            .AddJwtBearer(options =>
+             {
+                 options.Authority = domain;
+             });
+
             var app = builder.Build();
             
             var scope = app.Services.CreateScope();
@@ -33,10 +43,18 @@ namespace API
                 app.UseSwagger();
                 app.UseSwaggerUI();
             }
+            app.UseCors(x => x
+                    .AllowAnyMethod()
+                    .AllowAnyHeader()
+                    .WithOrigins("http://localhost:5173", "https://sheper.eu.auth0.com")
+                    .AllowCredentials()
+                    );
 
             app.UseHttpsRedirection();
 
+            app.UseAuthentication();
             app.UseAuthorization();
+            app.Use((context, next) => { context.Request.Scheme = "https"; return next(); });
 
 
             app.MapControllers();

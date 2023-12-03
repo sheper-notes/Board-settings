@@ -1,8 +1,17 @@
-﻿using Common.Enums;
+﻿using Auth0.AuthenticationApi;
+using Auth0.AuthenticationApi.Models;
+using Auth0.ManagementApi;
+using Common;
+using Common.Enums;
 using Common.Interfaces;
+using Data;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json.Linq;
+using RestSharp;
+using System;
+using System.Net.Http.Headers;
 
 namespace API.Controllers
 {
@@ -10,27 +19,63 @@ namespace API.Controllers
     [ApiController]
     public class UserController : ControllerBase
     {
-        public IUserLogic UserLogic { get; set; }
-        public UserController(IUserLogic userLogic) { 
-            UserLogic = userLogic;
+        public IUserQueries UserQueries { get; set; }
+        public UserController(IUserQueries userQueries) {
+            UserQueries = userQueries;
         }
 
         [HttpPost()]
-        public async Task<IActionResult> Add(string boardId, string userId, Role role)
+        public async Task<IActionResult> Add(long boardId, string email, Role role)
         {
-            return Ok();
+            var currentUser = await UserInfoUtil.GetUserInfo(HttpContext.Request.Headers["Authorization"]);
+
+            if (currentUser == null) return NotFound();
+
+            var requestingUser = await UserQueries.GetUser(boardId, currentUser.UserId);
+            if (requestingUser.Role != Role.Owner)
+            {
+                return Unauthorized();
+            }
+
+            var client = new ManagementApiClient("", new Uri("https://sheper.eu.auth0.com/api/v2"));
+            var res = await client.Users.GetUsersByEmailAsync(email);
+
+            if (res.Count < 1)
+                return NotFound();
+            
+            return await UserQueries.AddUser(boardId, "", res.FirstOrDefault().UserId, role) ==true ? Ok() : BadRequest();
+            
         }
 
         [HttpPut()]
-        public async Task<IActionResult> UpdateRole(string userId, string boardId, Role role)
+        public async Task<IActionResult> UpdateRole(string userId, long boardId, Role role)
         {
-            return Ok();
+            var currentUser = await UserInfoUtil.GetUserInfo(HttpContext.Request.Headers["Authorization"]);
+
+            if(currentUser == null) return NotFound();
+
+            var requestingUser = await UserQueries.GetUser(boardId, currentUser.UserId);
+            if(requestingUser.Role != Role.Owner)
+            {
+                return Unauthorized();
+            }
+            return await UserQueries.ChangeUserRole(boardId, userId, role) == true ? Ok() : BadRequest();
         }
 
         [HttpDelete("{boardId}/{userId}")]
         public async Task<IActionResult> Remove(long boardId, string userId)
         {
-            var result = await UserLogic.RemoveUser(boardId, userId);
+            var currentUser = await UserInfoUtil.GetUserInfo(HttpContext.Request.Headers["Authorization"]);
+
+            if (currentUser == null) return NotFound();
+
+            var requestingUser = await UserQueries.GetUser(boardId, currentUser.UserId);
+            if (requestingUser.Role != Role.Owner)
+            {
+                return Unauthorized();
+            }
+
+            var result = await UserQueries.RemoveUser(boardId, userId);
             if (result)
                 return BadRequest();
             return Ok();
@@ -39,7 +84,17 @@ namespace API.Controllers
         [HttpGet("{boardId}")]
         public async Task<IActionResult> GetAll(long boardId)
         {
-            var result = await UserLogic.GetUsers(boardId);
+            var currentUser = await UserInfoUtil.GetUserInfo(HttpContext.Request.Headers["Authorization"]);
+
+            if (currentUser == null) return NotFound();
+
+            var requestingUser = await UserQueries.GetUser(boardId, currentUser.UserId);
+            if (requestingUser == null)
+            {
+                return Unauthorized();
+            }
+
+            var result = await UserQueries.GetUsers(boardId);
             if (result.Count() == 0)
                 return NotFound();
             return Ok();
@@ -48,7 +103,7 @@ namespace API.Controllers
         [HttpGet("{boardId}/{userId}")]
         public async Task<IActionResult> GetUser(long boardId, string userId)
         {
-            var result = await UserLogic.GetUser(boardId, userId);
+            var result = await UserQueries.GetUser(boardId, userId);
             if (result == null)
                 return NotFound();
             return Ok(result);

@@ -12,7 +12,8 @@ namespace Common.Interfaces
     {
         public Task<UserRoleRelation> GetUser(long boardId, string userId);
         public Task<IEnumerable<UserRoleRelation>> GetUsers(long boardId);
-        public Task ChangeUserRole(long boardId, string userId, Role role);
+        public Task<bool> AddUser(long boardId, string Id, string userId, Role role);
+        public Task<bool> ChangeUserRole(long boardId, string userId, Role role);
         public Task<bool> RemoveUser(long boardId, string userId);
 
     }

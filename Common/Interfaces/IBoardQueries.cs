@@ -12,6 +12,7 @@ namespace Common.Interfaces
     {
         public Task<Board> GetBoardById(long Id);
         public Task UpdateBoardName(long Id, string NewName);
+        public Task<IEnumerable<Board>> GetBoardsForUser(string Id);
         public Task UpdateSubscriptionType(long Id, SubscriptionType subscriptionType);
     }
 }

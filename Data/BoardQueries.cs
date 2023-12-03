@@ -1,6 +1,7 @@
 ﻿using Common.Enums;
 using Common.Interfaces;
 using Common.Models;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -22,6 +23,13 @@ namespace Data
         {
             return await db.Boards.FindAsync(Id);
         }
+
+        public async Task<IEnumerable<Board>> GetBoardsForUser(string Id)
+        {
+            return await db.Boards.Where(x => x.Users.Any(y => y.UserId == Id)).ToListAsync();
+        }
+
+
         public async Task UpdateBoardName(long Id, string NewName)
         {
             var board = await db.Boards.FindAsync(Id);
