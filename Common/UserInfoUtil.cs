@@ -11,9 +11,9 @@ namespace Common
 {
     public class UserInfoUtil
     {
-        public static async Task<UserInfo> GetUserInfo(string token) {
+        public static async Task<UserInfo> GetUserInfo(string token, string authURL) {
             UserInfo currentUser;
-            Uri uri = new Uri("https://sheper.eu.auth0.com");
+            Uri uri = new Uri(authURL);
             try
             {
                 currentUser = await new AuthenticationApiClient(uri).GetUserInfoAsync(token);

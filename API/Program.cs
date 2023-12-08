@@ -1,8 +1,8 @@
-
 using Common.Interfaces;
 using Data;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.IdentityModel.Tokens;
 using System.Security.Claims;
 
@@ -14,9 +14,14 @@ namespace API
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            // Add services to the container.
+            var databaseConn = builder.Configuration.GetValue<string>("databaseConn");
+            var authURL = builder.Configuration.GetValue<string>("authURL");
+            var authSecret = builder.Configuration.GetValue<string>("authSecret");
 
-              builder.Services.AddControllers();
+
+
+            builder.Services.AddMemoryCache();
+            builder.Services.AddControllers();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
@@ -60,6 +65,11 @@ namespace API
             app.MapControllers();
 
             app.Run();
+
+            var cache = app.Services.GetService<IMemoryCache>();
+            cache.Set("authURL", authURL);
+            cache.Set("authSecret", authSecret);
+
         }
     }
 }

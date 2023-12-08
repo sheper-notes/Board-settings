@@ -1,4 +1,4 @@
-﻿using Auth0.AuthenticationApi;
+using Auth0.AuthenticationApi;
 using Auth0.AuthenticationApi.Models;
 using Auth0.ManagementApi;
 using Common;
@@ -8,6 +8,7 @@ using Data;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Caching.Memory;
 using Newtonsoft.Json.Linq;
 using RestSharp;
 using System;
@@ -20,14 +21,16 @@ namespace API.Controllers
     public class UserController : ControllerBase
     {
         public IUserQueries UserQueries { get; set; }
-        public UserController(IUserQueries userQueries) {
+        public IMemoryCache Cache { get; set; }
+        public UserController(IUserQueries userQueries, IMemoryCache memoryCache) {
             UserQueries = userQueries;
+            Cache = memoryCache;
         }
 
         [HttpPost()]
         public async Task<IActionResult> Add(long boardId, string email, Role role)
         {
-            var currentUser = await UserInfoUtil.GetUserInfo(HttpContext.Request.Headers["Authorization"]);
+            var currentUser = await UserInfoUtil.GetUserInfo(HttpContext.Request.Headers["Authorization"], Cache.Get("authURL").ToString());
 
             if (currentUser == null) return NotFound();
 
@@ -36,21 +39,21 @@ namespace API.Controllers
             {
                 return Unauthorized();
             }
-
-            var client = new ManagementApiClient("", new Uri("https://sheper.eu.auth0.com/api/v2"));
+             new Auth0.AuthenticationApi.AuthenticationApiClient().
+            var client = new ManagementApiClient("", new Uri(Cache.Get("authURL").ToString()));
             var res = await client.Users.GetUsersByEmailAsync(email);
 
             if (res.Count < 1)
                 return NotFound();
             
-            return await UserQueries.AddUser(boardId, "", res.FirstOrDefault().UserId, role) ==true ? Ok() : BadRequest();
+            return await UserQueries.AddUser(boardId, "", res.FirstOrDefault().UserId, role) == true ? Ok() : BadRequest();
             
         }
 
         [HttpPut()]
         public async Task<IActionResult> UpdateRole(string userId, long boardId, Role role)
         {
-            var currentUser = await UserInfoUtil.GetUserInfo(HttpContext.Request.Headers["Authorization"]);
+            var currentUser = await UserInfoUtil.GetUserInfo(HttpContext.Request.Headers["Authorization"], Cache.Get("authURL").ToString());
 
             if(currentUser == null) return NotFound();
 
@@ -65,7 +68,7 @@ namespace API.Controllers
         [HttpDelete("{boardId}/{userId}")]
         public async Task<IActionResult> Remove(long boardId, string userId)
         {
-            var currentUser = await UserInfoUtil.GetUserInfo(HttpContext.Request.Headers["Authorization"]);
+            var currentUser = await UserInfoUtil.GetUserInfo(HttpContext.Request.Headers["Authorization"], Cache.Get("authURL").ToString());
 
             if (currentUser == null) return NotFound();
 
@@ -84,7 +87,7 @@ namespace API.Controllers
         [HttpGet("{boardId}")]
         public async Task<IActionResult> GetAll(long boardId)
         {
-            var currentUser = await UserInfoUtil.GetUserInfo(HttpContext.Request.Headers["Authorization"]);
+            var currentUser = await UserInfoUtil.GetUserInfo(HttpContext.Request.Headers["Authorization"], Cache.Get("authURL").ToString());
 
             if (currentUser == null) return NotFound();
 
