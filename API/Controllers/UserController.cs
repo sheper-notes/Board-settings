@@ -1,4 +1,4 @@
-﻿using Auth0.AuthenticationApi;
+using Auth0.AuthenticationApi;
 using Auth0.AuthenticationApi.Models;
 using Auth0.ManagementApi;
 using Common;
@@ -20,8 +20,10 @@ namespace API.Controllers
     public class UserController : ControllerBase
     {
         public IUserQueries UserQueries { get; set; }
-        public UserController(IUserQueries userQueries) {
+        private ILogger Logger { get; set; }
+        public UserController(IUserQueries userQueries, ILogger _logger) {
             UserQueries = userQueries;
+            Logger = _logger;
         }
 
         [HttpPost()]
@@ -103,9 +105,31 @@ namespace API.Controllers
         [HttpGet("{boardId}/{userId}")]
         public async Task<IActionResult> GetUser(long boardId, string userId)
         {
+            var currentUser = await UserInfoUtil.GetUserInfo(HttpContext.Request.Headers["Authorization"]);
+
+            if (currentUser == null)
+            {
+                return NotFound();
+            }
+
+            var requestingUser = await UserQueries.GetUser(boardId, currentUser.UserId);
+            if (requestingUser == null)
+            {
+
+                return Unauthorized();
+            }
+
+            if (requestingUser.Role != Role.Owner)
+            {
+                return Unauthorized();
+            }
+
             var result = await UserQueries.GetUser(boardId, userId);
             if (result == null)
+            {
                 return NotFound();
+            }
+                
             return Ok(result);
         }
     }

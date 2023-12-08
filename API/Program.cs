@@ -24,7 +24,7 @@ namespace API
                 options.UseSqlite("Data Source=Application.db;"));
             builder.Services.AddScoped<IUserQueries, UserQueries>();
             builder.Services.AddScoped<IBoardQueries, BoardQueries>();
-
+            builder.Services.AddLogging();
             var domain = $"https://{builder.Configuration["Auth0:Domain"]}/";
             builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
             .AddJwtBearer(options =>
