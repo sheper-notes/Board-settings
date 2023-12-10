@@ -1,8 +1,10 @@
-
+using Common;
 using Common.Interfaces;
 using Data;
+using IdGen.DependencyInjection;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.IdentityModel.Tokens;
 using System.Security.Claims;
 
@@ -14,23 +16,22 @@ namespace API
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            // Add services to the container.
+            var databaseConn = builder.Configuration.GetValue<string>("databaseConn");
+            var authURL = builder.Configuration.GetValue<string>("authURL");
+            var authSecret = builder.Configuration.GetValue<string>("authSecret");
 
-              builder.Services.AddControllers();
+            builder.Services.AddMemoryCache();
+            builder.Services.AddControllers();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
             builder.Services.AddDbContext<Database>(options =>
-                options.UseSqlite("Data Source=Application.db;"));
+                options.UseNpgsql(databaseConn));
             builder.Services.AddScoped<IUserQueries, UserQueries>();
             builder.Services.AddScoped<IBoardQueries, BoardQueries>();
+            builder.Services.AddSingleton<Auth0AccessTokenManager>();
             builder.Services.AddLogging();
-            var domain = $"https://{builder.Configuration["Auth0:Domain"]}/";
-            builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-            .AddJwtBearer(options =>
-             {
-                 options.Authority = domain;
-             });
+            builder.Services.AddIdGen(123);
 
             var app = builder.Build();
             
@@ -43,23 +44,21 @@ namespace API
                 app.UseSwagger();
                 app.UseSwaggerUI();
             }
-            app.UseCors(x => x
-                    .AllowAnyMethod()
-                    .AllowAnyHeader()
-                    .WithOrigins("http://localhost:5173", "https://sheper.eu.auth0.com")
-                    .AllowCredentials()
-                    );
+ 
 
-            app.UseHttpsRedirection();
+            //app.UseHttpsRedirection();
 
-            app.UseAuthentication();
-            app.UseAuthorization();
             app.Use((context, next) => { context.Request.Scheme = "https"; return next(); });
 
 
             app.MapControllers();
-
+            var cache = app.Services.GetService<IMemoryCache>();
+            cache.Set("authURL", authURL);
+            cache.Set("authSecret", authSecret);
             app.Run();
+
+
+
         }
     }
 }

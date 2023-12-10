@@ -42,5 +42,20 @@ namespace Data
             board.SubscriptionType = subscriptionType;
             await db.SaveChangesAsync();
         }
+
+        public async Task<bool> CreateBoard(Board board)
+        {
+            try
+            {
+                var res = await db.Boards.AddAsync(board);
+                return true;
+            }
+            catch (Exception)
+            {
+
+                return false;
+            }
+        }
+
     }
 }
