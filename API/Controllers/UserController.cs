@@ -104,7 +104,7 @@ namespace API.Controllers
             var result = await UserQueries.GetUsers(boardId);
             if (result.Count() == 0)
                 return NotFound();
-            return Ok();
+            return Ok(result);
         }
 
         [HttpGet("{boardId}/{userId}")]

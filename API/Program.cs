@@ -1,5 +1,6 @@
 using Common;
 using Common.Interfaces;
+using Common.Models;
 using Data;
 using IdGen.DependencyInjection;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -37,7 +38,22 @@ namespace API
             
             var scope = app.Services.CreateScope();
             scope.ServiceProvider.GetRequiredService<Database>().Database.EnsureCreated();
+            var db = scope.ServiceProvider.GetRequiredService<Database>();
+            if(db.Boards.Where(x => x.Id == 1).Count() == 0)
+            {
+                var board = new Common.Models.Board()
+                {
+                    Id = 1,
+                    Name = "test",
+                    SubscriptionType = Common.Enums.SubscriptionType.Standard,
+                    Users = new List<Common.Models.UserRoleRelation>()
+                };
 
+                board.Users.Add(new Common.Models.UserRoleRelation() { UserId = "testID", Role = Common.Enums.Role.Owner });
+                db.Boards.Add(board);
+                db.SaveChanges();
+            }
+            
             // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
             {
