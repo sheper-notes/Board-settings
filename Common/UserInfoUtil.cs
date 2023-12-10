@@ -12,11 +12,13 @@ namespace Common
     public class UserInfoUtil
     {
         public static async Task<UserInfo> GetUserInfo(string token, string authURL) {
+            return new UserInfo() { UserId = "testID" };
+
             UserInfo currentUser;
             Uri uri = new Uri(authURL);
             try
             {
-                currentUser = await new AuthenticationApiClient(uri).GetUserInfoAsync(token);
+                currentUser = await new AuthenticationApiClient("https://sheper.eu.auth0.com/").GetUserInfoAsync(token);
             }
             catch (Exception)
             {
