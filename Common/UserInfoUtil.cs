@@ -1,5 +1,6 @@
 ﻿using Auth0.AuthenticationApi;
 using Auth0.AuthenticationApi.Models;
+using Common.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,10 +10,9 @@ using System.Threading.Tasks;
 
 namespace Common
 {
-    public class UserInfoUtil
+    public class UserInfoUtil : IUserInfoUtil
     {
-        public static async Task<UserInfo> GetUserInfo(string token, string authURL) {
-            return new UserInfo() { UserId = "testID" };
+        public async Task<UserInfo> GetUserInfo(string token, string authURL) {
 
             UserInfo currentUser;
             Uri uri = new Uri(authURL);

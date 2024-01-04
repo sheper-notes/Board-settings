@@ -48,6 +48,7 @@ namespace Data
             try
             {
                 var res = await db.Boards.AddAsync(board);
+                await db.SaveChangesAsync();
                 return true;
             }
             catch (Exception)

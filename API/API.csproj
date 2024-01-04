@@ -13,6 +13,7 @@
     <PackageReference Include="Auth0.AuthenticationApi" Version="7.24.0" />
     <PackageReference Include="Auth0.Core" Version="7.24.0" />
     <PackageReference Include="Auth0.ManagementApi" Version="7.24.0" />
+    <PackageReference Include="HtmlSanitizer" Version="8.0.811" />
     <PackageReference Include="IdGen" Version="3.0.3" />
     <PackageReference Include="IdGen.DependencyInjection" Version="3.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="7.0.14" />

@@ -1,6 +1,6 @@
 ﻿using Auth0.AuthenticationApi.Models;
 using Common.Models;
-using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
@@ -16,10 +16,10 @@ namespace Common
         private DateTime LastUpdate;
         public bool isUpdating;
         public string accessToken;
-        private IMemoryCache cache;
+        private IConfiguration configuration;
 
-        public Auth0AccessTokenManager(IMemoryCache cache) {
-            this.cache = cache;
+        public Auth0AccessTokenManager(IConfiguration configuration) {
+            this.configuration = configuration;
         }
 
         public async Task<string> Get()
@@ -43,8 +43,8 @@ namespace Common
                 using (var httpClient = new HttpClient())
                 {
                     var clientId = "MBxJEyzwxPgrSuZNHSdSqxg7Vug0tFFz"; // Fill in your client ID
-                    var clientSecret = cache.Get("authSecret"); // Fill in your client secret
-                    var audience = cache.Get("authURL"); // Fill in your audience
+                    var clientSecret = "";//configuration.GetValue<string>("authSecret"); // Fill in your client secret
+                    var audience = "";//configuration.GetValue<string>("authURL"); // Fill in your audience
                     var requestBody = $"{{\"client_id\":\"{clientId}\",\"client_secret\":\"{clientSecret}\",\"audience\":\"{audience}\",\"grant_type\":\"client_credentials\"}}";
 
                     var content = new StringContent(requestBody, Encoding.UTF8, "application/json");

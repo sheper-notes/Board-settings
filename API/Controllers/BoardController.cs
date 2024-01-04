@@ -4,10 +4,8 @@ using Common;
 using Common.Interfaces;
 using Common.Models;
 using IdGen;
-using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Caching.Memory;
+
 
 namespace API.Controllers
 {
@@ -18,20 +16,22 @@ namespace API.Controllers
         private IdGenerator IdGenerator { get; set; }
         private IBoardQueries BoardQueries { get; set; }
         private IUserQueries UserQueries { get; set; }
-        private IMemoryCache Cache { get; set; }
-        public BoardController(IdGenerator _IdGen, IBoardQueries boardQueries, IMemoryCache cache, IUserQueries _userQueries) {
+        private IUserInfoUtil userInfoUtil { get; set; }
+        private IConfiguration configuration { get; set; }
+        public BoardController(IdGenerator _IdGen, IBoardQueries boardQueries, IUserQueries _userQueries, IUserInfoUtil userInfoUtil, IConfiguration configuration) {
             BoardQueries = boardQueries;
-            Cache = cache;
             IdGenerator = _IdGen;
             UserQueries = _userQueries;
+            this.userInfoUtil = userInfoUtil;
+            this.configuration = configuration;
         }
 
         [HttpGet]
         public async Task<IActionResult> GetBoards()
         {
-            var currentUser = await UserInfoUtil.GetUserInfo(HttpContext.Request.Headers["Authorization"], Cache.Get("authURL").ToString());
+            var currentUser = await userInfoUtil.GetUserInfo(HttpContext.Request.Headers["Authorization"], configuration.GetValue<string>("authURL"));
 
-            if (currentUser == null) return NotFound();
+            if (currentUser == null) return Unauthorized();
 
             return Ok(await BoardQueries.GetBoardsForUser(currentUser.UserId));
         }
@@ -39,11 +39,10 @@ namespace API.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateBoard(Board board)
         {
-            var currentUser = await UserInfoUtil.GetUserInfo(HttpContext.Request.Headers["Authorization"], Cache.Get("authURL").ToString());
+            var currentUser = await userInfoUtil.GetUserInfo(HttpContext.Request.Headers["Authorization"], configuration.GetValue<string>("authURL"));
 
             if (currentUser == null)
-                return NotFound();
-
+                return Unauthorized();
             board.Id = IdGenerator.CreateId();
             if(!await BoardQueries.CreateBoard(board))
             {
