@@ -1,8 +1,10 @@
-name: Docker Image CI
+name: Docker Image Build Dev
 
 on:
   push:
-    branches: [ "master" ]
+
+    branches:
+    - 'dev'
 
 
 jobs:
@@ -28,7 +30,7 @@ jobs:
       name: Build and push
       uses: docker/build-push-action@v5
       with:
-        context: .
-        file: ./API/Dockerfile
+        context: ./
+        file: ./Dockerfile
         push: true
-        tags: ${{ secrets.DOCKERHUB_USERNAME }}/board-settings:latest
+        tags: ${{ secrets.DOCKERHUB_USERNAME }}/board-settings:dev
