@@ -39,19 +39,19 @@ namespace API.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateBoard(Board board)
         {
-            var currentUser = await userInfoUtil.GetUserInfo(HttpContext.Request.Headers["Authorization"], configuration.GetValue<string>("authURL"));
+            var currentUser = new UserInfo() { UserId = "1" }; //await userInfoUtil.GetUserInfo(HttpContext.Request.Headers["Authorization"], configuration.GetValue<string>("authURL"));
 
             if (currentUser == null)
-                return Unauthorized();
+                return Unauthorized("User not found");
             board.Id = IdGenerator.CreateId();
             if(!await BoardQueries.CreateBoard(board))
             {
-                return BadRequest();
+                return BadRequest("Error creating board");
             }
 
             if (!await UserQueries.AddUser(board.Id, IdGenerator.CreateId().ToString(), currentUser.UserId, Common.Enums.Role.Owner))
             {
-                return BadRequest();
+                return BadRequest("Error adding user to board");
             }
             return Ok(board.Id);
         }

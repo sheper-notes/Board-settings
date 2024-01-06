@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.IdentityModel.Tokens;
+using Prometheus;
 using System.Security.Claims;
 
 namespace API
@@ -21,7 +22,7 @@ namespace API
             var databaseConn = builder.Configuration.GetValue<string>("databaseConn");
             var authURL = builder.Configuration.GetValue<string>("authURL");
             var authSecret = builder.Configuration.GetValue<string>("authSecret");
-
+            databaseConn = "Host=localhost:5432;Database=shepe;Username=postgres;Password=postgres";
             builder.Services.AddMemoryCache();
             builder.Services.AddControllers();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -49,17 +50,22 @@ namespace API
                 app.UseSwagger();
                 app.UseSwaggerUI();
             }
- 
+            app.UseRouting();
 
             //app.UseHttpsRedirection();
 
             app.Use((context, next) => { context.Request.Scheme = "https"; return next(); });
 
 
-            app.MapControllers();
             var cache = app.Services.GetService<IMemoryCache>();
             cache.Set("authURL", authURL);
             cache.Set("authSecret", authSecret);
+            app.UseHttpMetrics();
+            app.UseEndpoints(endpoints =>
+            {
+                endpoints.MapControllers();
+                endpoints.MapMetrics();
+            });
             app.Run();
 
 
