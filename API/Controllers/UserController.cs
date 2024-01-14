@@ -10,8 +10,10 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
 using Newtonsoft.Json.Linq;
+using OpenTelemetry.Trace;
 using RestSharp;
 using System;
+using System.Diagnostics;
 using System.Net.Http.Headers;
 
 namespace API.Controllers
@@ -24,11 +26,15 @@ namespace API.Controllers
         IConfiguration configuration;
         private Auth0AccessTokenManager Auth0AccessTokenManager { get; set; }
         private IUserInfoUtil userInfoUtil { get; set; }
-        public UserController(IUserQueries userQueries, IConfiguration configuration, Auth0AccessTokenManager auth0AccessTokenManager, IUserInfoUtil userInfoUtil) {
+        private ILogger Logger { get; set; }
+        private Tracer tracer { get; set; }
+        public UserController(IUserQueries userQueries, IConfiguration configuration, Auth0AccessTokenManager auth0AccessTokenManager, IUserInfoUtil userInfoUtil, ILogger logger, Tracer tracer) {
             UserQueries = userQueries;
             Auth0AccessTokenManager = auth0AccessTokenManager;
             this.userInfoUtil = userInfoUtil;
             this.configuration = configuration;
+            Logger = logger;
+            this.tracer = tracer;
         }
 
         [HttpPost()]
@@ -42,12 +48,14 @@ namespace API.Controllers
             var requestingUser = await UserQueries.GetUser(boardId, currentUser.UserId);
             if (requestingUser.Role != Role.Owner)
             {
+                Logger.LogInformation("User {USR} tried accessing {BD} without permission", currentUser.UserId, boardId);
                 return Unauthorized();
             }
 
             var token = await Auth0AccessTokenManager.Get();
-            var client = new ManagementApiClient(token, new Uri(configuration.GetValue<string>("authURL").ToString()));
+            var client = new ManagementApiClient(token, new Uri("https://sheper.eu.auth0.com/api/v2/"));//configuration.GetValue<string>("authURL").ToString()));
             var res = await client.Users.GetUsersByEmailAsync(email);
+            
 
             if (res.Count < 1)
                 return NotFound();
@@ -66,6 +74,7 @@ namespace API.Controllers
             var requestingUser = await UserQueries.GetUser(boardId, currentUser.UserId);
             if(requestingUser == null)
             {
+                Logger.LogInformation("User {USR} tried accessing {BD} without permission", currentUser.UserId, boardId);
                 return Unauthorized("Requestee not a member of this board");
             }
 
@@ -86,11 +95,13 @@ namespace API.Controllers
             var requestingUser = await UserQueries.GetUser(boardId, currentUser.UserId);
             if (requestingUser == null)
             {
+                Logger.LogInformation("User {USR} tried accessing {BD} without permission", currentUser.UserId, boardId);
                 return Unauthorized("Requestee not a member of this board");
             }
 
             if (requestingUser.Role != Role.Owner)
             {
+                Logger.LogInformation("User {USR} tried accessing {BD} without permission", currentUser.UserId, boardId);
                 return Unauthorized("Insufficient rights");
             }
 
@@ -105,11 +116,16 @@ namespace API.Controllers
         {
             var currentUser = await userInfoUtil.GetUserInfo(HttpContext.Request.Headers["Authorization"], configuration.GetValue<string>("authURL").ToString());
 
-            if (currentUser == null) return Unauthorized("Token is not associated with a session");
+            if (currentUser == null)
+            {
+                Logger.LogInformation("User tried accessing {BD} without permission",  boardId);
+                return Unauthorized("Token is not associated with a session");
+            }
 
             var requestingUser = await UserQueries.GetUser(boardId, currentUser.UserId);
             if (requestingUser == null)
             {
+                Logger.LogInformation("User {USR} tried accessing {BD} without permission", currentUser.UserId, boardId);
                 return Unauthorized("Requestee not a member of this board");
             }
 

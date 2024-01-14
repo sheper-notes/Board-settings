@@ -44,7 +44,7 @@ namespace Common
                 {
                     var clientId = "MBxJEyzwxPgrSuZNHSdSqxg7Vug0tFFz"; // Fill in your client ID
                     var clientSecret = "";//configuration.GetValue<string>("authSecret"); // Fill in your client secret
-                    var audience = "";//configuration.GetValue<string>("authURL"); // Fill in your audience
+                    var audience = "https://sheper.eu.auth0.com/api/v2/";//configuration.GetValue<string>("authURL"); // Fill in your audience
                     var requestBody = $"{{\"client_id\":\"{clientId}\",\"client_secret\":\"{clientSecret}\",\"audience\":\"{audience}\",\"grant_type\":\"client_credentials\"}}";
 
                     var content = new StringContent(requestBody, Encoding.UTF8, "application/json");

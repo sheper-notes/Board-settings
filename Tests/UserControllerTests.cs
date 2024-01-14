@@ -59,7 +59,7 @@ namespace Tests
             .Build();
 
             configuration["authURL"] = "https://TestURL.com";
-            var userController = new UserController(userQueries, configuration, null, mockUserInfoUtil);
+            var userController = new UserController(userQueries, configuration, null, mockUserInfoUtil, null);
 
 
             MockUserAuthentication(userController, "jwt");
@@ -88,7 +88,7 @@ namespace Tests
             .Build();
 
             configuration["authURL"] = "https://TestURL.com";
-            var userController = new UserController(userQueries, configuration, null, mockUserInfoUtil);
+            var userController = new UserController(userQueries, configuration, null, mockUserInfoUtil, null);
 
 
             MockUserAuthentication(userController, "jwt");
@@ -119,7 +119,7 @@ namespace Tests
             .Build();
 
             configuration["authURL"] = "https://TestURL.com";
-            var userController = new UserController(userQueries, configuration, null, mockUserInfoUtil);
+            var userController = new UserController(userQueries, configuration, null, mockUserInfoUtil, null);
 
 
             MockUserAuthentication(userController, "jwt");
@@ -150,7 +150,7 @@ namespace Tests
             .Build();
 
             configuration["authURL"] = "https://TestURL.com";
-            var userController = new UserController(userQueries, configuration, null, mockUserInfoUtil);
+            var userController = new UserController(userQueries, configuration, null, mockUserInfoUtil, null);
 
 
             MockUserAuthentication(userController, "jwt");
@@ -182,7 +182,7 @@ namespace Tests
             .Build();
 
             configuration["authURL"] = "https://TestURL.com";
-            var userController = new UserController(userQueries, configuration, null, mockUserInfoUtil);
+            var userController = new UserController(userQueries, configuration, null, mockUserInfoUtil, null);
 
 
             MockUserAuthentication(userController, "jwt");
@@ -212,7 +212,7 @@ namespace Tests
             .Build();
 
             configuration["authURL"] = "https://TestURL.com";
-            var userController = new UserController(userQueries, configuration, null, mockUserInfoUtil);
+            var userController = new UserController(userQueries, configuration, null, mockUserInfoUtil, null);
 
 
             MockUserAuthentication(userController, "jwt");
@@ -243,7 +243,7 @@ namespace Tests
             .Build();
 
             configuration["authURL"] = "https://TestURL.com";
-            var userController = new UserController(userQueries, configuration, null, mockUserInfoUtil);
+            var userController = new UserController(userQueries, configuration, null, mockUserInfoUtil, null);
 
 
             MockUserAuthentication(userController, "jwt");
@@ -274,7 +274,7 @@ namespace Tests
             .Build();
 
             configuration["authURL"] = "https://TestURL.com";
-            var userController = new UserController(userQueries, configuration, null, mockUserInfoUtil);
+            var userController = new UserController(userQueries, configuration, null, mockUserInfoUtil, null);
 
 
             MockUserAuthentication(userController, "jwt");
@@ -305,7 +305,7 @@ namespace Tests
             .Build();
 
             configuration["authURL"] = "https://TestURL.com";
-            var userController = new UserController(userQueries, configuration, null, mockUserInfoUtil);
+            var userController = new UserController(userQueries, configuration, null, mockUserInfoUtil, null);
 
 
             MockUserAuthentication(userController, "jwt");
@@ -335,7 +335,7 @@ namespace Tests
             .Build();
 
             configuration["authURL"] = "https://TestURL.com";
-            var userController = new UserController(userQueries, configuration, null, mockUserInfoUtil);
+            var userController = new UserController(userQueries, configuration, null, mockUserInfoUtil, null);
 
 
             MockUserAuthentication(userController, "jwt");
@@ -365,7 +365,7 @@ namespace Tests
             .Build();
 
             configuration["authURL"] = "https://TestURL.com";
-            var userController = new UserController(userQueries, configuration, null, mockUserInfoUtil);
+            var userController = new UserController(userQueries, configuration, null, mockUserInfoUtil, null);
 
 
             MockUserAuthentication(userController, "jwt");

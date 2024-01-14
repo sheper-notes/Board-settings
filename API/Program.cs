@@ -4,12 +4,22 @@ using Common.Models;
 using Data;
 using Ganss.Xss;
 using IdGen.DependencyInjection;
+using Jaeger.Reporters;
+using Logproto;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
+using OpenTracing;
 using Prometheus;
+using System.Diagnostics;
+using System.Net;
+using System.Reflection.PortableExecutable;
 using System.Security.Claims;
+using System.Text;
 
 namespace API
 {
@@ -23,6 +33,42 @@ namespace API
             var authURL = builder.Configuration.GetValue<string>("authURL");
             var authSecret = builder.Configuration.GetValue<string>("authSecret");
             databaseConn = "Host=localhost:5432;Database=shepe;Username=postgres;Password=postgres";
+
+            builder.Services.AddOpenTelemetry().WithTracing(x =>
+                x.SetResourceBuilder(ResourceBuilder.CreateDefault().AddService(builder.Environment.ApplicationName))
+                .AddAspNetCoreInstrumentation(x =>
+                {
+                    x.EnrichWithHttpRequest = async (activity, httpWebRequest) =>
+                    {
+                        StringBuilder headersString = new StringBuilder();
+
+                        foreach (var (key, value) in httpWebRequest.Headers)
+                        {
+                            headersString.Append($"{key}: {string.Join(",", value)}\n");
+                        }
+
+                        activity.SetTag("Headers", headersString);
+
+                        if(httpWebRequest.Body.CanSeek == true)
+                        {
+                            StreamReader reader = new StreamReader(httpWebRequest.Body, Encoding.UTF8);
+
+                            activity.SetTag("Body", await reader.ReadToEndAsync());
+                        }
+
+                    };
+                })
+                .AddHttpClientInstrumentation()
+                .AddOtlpExporter(opts => opts.Endpoint = new Uri("http://localhost:4317"))
+            );
+            builder.Services.AddTransient(provider =>
+            {
+                var loggerFactory = provider.GetRequiredService<ILoggerFactory>();
+                const string categoryName = "Any";
+                return loggerFactory.CreateLogger(categoryName);
+            });
+            builder.Services.AddSingleton(TracerProvider.Default.GetTracer(builder.Environment.ApplicationName));
+
             builder.Services.AddMemoryCache();
             builder.Services.AddControllers();
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -33,7 +79,6 @@ namespace API
             builder.Services.AddScoped<IUserQueries, UserQueries>();
             builder.Services.AddScoped<IBoardQueries, BoardQueries>();
             builder.Services.AddSingleton<Auth0AccessTokenManager>();
-            builder.Services.AddLogging();
             builder.Services.AddIdGen(123);
             builder.Services.AddScoped<IUserInfoUtil, UserInfoUtil>();
             builder.Services.AddSingleton<IConfiguration>(builder.Configuration);
@@ -67,9 +112,6 @@ namespace API
                 endpoints.MapMetrics();
             });
             app.Run();
-
-
-
         }
     }
 }

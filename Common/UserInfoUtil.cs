@@ -15,7 +15,7 @@ namespace Common
         public async Task<UserInfo> GetUserInfo(string token, string authURL) {
 
             UserInfo currentUser;
-            Uri uri = new Uri(authURL);
+            //Uri uri = new Uri(authURL);
             try
             {
                 currentUser = await new AuthenticationApiClient("https://sheper.eu.auth0.com/").GetUserInfoAsync(token);
