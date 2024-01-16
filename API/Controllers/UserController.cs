@@ -111,7 +111,7 @@ namespace API.Controllers
             return Ok();
         }
 
-        [HttpGet("{boardId}")]
+        [HttpGet("{boardId}/all")]
         public async Task<IActionResult> GetAll(long boardId)
         {
             var currentUser = await userInfoUtil.GetUserInfo(HttpContext.Request.Headers["Authorization"], configuration.GetValue<string>("authURL").ToString());
@@ -131,6 +131,27 @@ namespace API.Controllers
 
             var result = await UserQueries.GetUsers(boardId);
             return Ok(result);
+        }
+
+        [HttpGet("{boardId}")]
+        public async Task<IActionResult> Get(long boardId)
+        {
+            var currentUser = await userInfoUtil.GetUserInfo(HttpContext.Request.Headers["Authorization"], configuration.GetValue<string>("authURL").ToString());
+
+            if (currentUser == null)
+            {
+                Logger.LogInformation("User tried accessing {BD} without permission", boardId);
+                return Unauthorized("Token is not associated with a session");
+            }
+
+            var requestingUser = await UserQueries.GetUser(boardId, currentUser.UserId);
+            if (requestingUser == null)
+            {
+                Logger.LogInformation("User {USR} tried accessing {BD} without permission", currentUser.UserId, boardId);
+                return Unauthorized("Requestee not a member of this board");
+            }
+
+            return Ok(requestingUser);
         }
     }
 }

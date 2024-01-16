@@ -5,6 +5,7 @@ using Auth0.ManagementApi;
 
 using Common;
 using Common.Interfaces;
+using Common.Models;
 using Microsoft.AspNetCore.Mvc;
 
 [Route("api/[controller]")]
@@ -29,7 +30,7 @@ public class GDPRController : ControllerBase
     }
     // DELETE api/<GDPRController>/5
     [HttpDelete("all")]
-    public async Task<IActionResult> Delete(int id)
+    public async Task<IActionResult> Delete()
     {
         var currentUser = await userInfoUtil.GetUserInfo(HttpContext.Request.Headers["Authorization"], configuration.GetValue<string>("authURL"));
 
@@ -44,10 +45,16 @@ public class GDPRController : ControllerBase
 
         foreach (var board in userBoards)
         {
-            
+            var user = board.Users.Where(x=>x.UserId == currentUser.UserId).FirstOrDefault();
+
+            tasks.Add(DeleteUser(user));
         }
 
         await Task.WhenAll(tasks);
+        if(tasks.Count(x => x.IsFaulted) > 0)
+        {
+            return BadRequest("Not all boards were deleted");
+        }
         return Ok();
     }
 
@@ -75,5 +82,21 @@ public class GDPRController : ControllerBase
         }
 
         return Ok();
+    }
+
+    private async Task DeleteUser(UserRoleRelation user)
+    {
+        if(user.Role == Common.Enums.Role.Owner)
+        {
+            await ;
+        } else
+        {
+            var res = await UserQueries.RemoveUser(user.BoardId, user.UserId);
+            if(res == false )
+            {
+                new Exception();
+            }
+        }
+
     }
 }

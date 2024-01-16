@@ -29,6 +29,11 @@ namespace Data
             return await db.Boards.Where(x => x.Users.Any(y => y.UserId == Id)).ToListAsync();
         }
 
+        public async Task<IEnumerable<Board>> GetOwnedBoardsForUser(string Id)
+        {
+            return await db.Boards.Where(x => x.Users.Any(y => y.UserId == Id && y.Role == Role.Owner)).ToListAsync();
+        }
+
         public async Task<IEnumerable<Board>> GetBoardsForUser(string Id, int page)
         {
             return await db.Boards.Where(x => x.Users.Any(y => y.UserId == Id)).Skip((page -1) * 6).Take(6).ToListAsync();

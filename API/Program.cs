@@ -81,7 +81,8 @@ namespace API
             builder.Services.AddSingleton<Auth0AccessTokenManager>();
             builder.Services.AddIdGen(123);
             builder.Services.AddScoped<IUserInfoUtil, UserInfoUtil>();
-            builder.Services.AddSingleton<IConfiguration>(builder.Configuration);
+            var conf = builder.Configuration.AddEnvironmentVariables();
+            builder.Services.AddSingleton<IConfiguration>(conf.Build());
             var app = builder.Build();
             
             var scope = app.Services.CreateScope();
