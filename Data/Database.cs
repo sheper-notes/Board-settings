@@ -36,7 +36,7 @@ namespace Data
 
         public Database(DbContextOptions<Database> options, IConfiguration configuration) : base(options)
         {
-            this._provider = new GenerateEncryptionProvider("AAECAwQFBgcICQoLDA0ODw==");
+            this._provider = new GenerateEncryptionProvider(configuration.GetValue<string>("encryptionKEY"));
 
         }
     }

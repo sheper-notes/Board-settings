@@ -25,7 +25,7 @@ namespace Common
 			{
 				var httpClient = new HttpClient();
 				httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {jwt}");
-				var res = await httpClient.DeleteAsync($"{"http://localhost:5030"}/api/boardObject/delete/{id}"); //Configuration.GetValue<string>("boardDBServiceURL")
+				var res = await httpClient.DeleteAsync($"{Configuration.GetValue<string>("boardSettings")}/api/boardObject/delete/{id}"); //Configuration.GetValue<string>("boardDBServiceURL")
                 res.EnsureSuccessStatusCode();
 			}
 			catch (Exception)

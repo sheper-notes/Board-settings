@@ -29,10 +29,7 @@ namespace API
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            var databaseConn = builder.Configuration.GetValue<string>("databaseConn");
-            var authURL = builder.Configuration.GetValue<string>("authURL");
-            var authSecret = builder.Configuration.GetValue<string>("authSecret");
-            databaseConn = "Host=localhost:5432;Database=shepe;Username=postgres;Password=postgres";
+
 
             builder.Services.AddOpenTelemetry().WithTracing(x =>
                 x.SetResourceBuilder(ResourceBuilder.CreateDefault().AddService(builder.Environment.ApplicationName))
