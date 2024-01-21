@@ -15,7 +15,7 @@ namespace Common.Interfaces
         public Task<IEnumerable<Board>> GetBoardsForUser(string Id);
         public Task<bool> CreateBoard(Board board);
         public Task<IEnumerable<Board>> GetOwnedBoardsForUser(string Id);
-
+        public Task<bool> Delete(Board board);
         public Task UpdateSubscriptionType(long Id, SubscriptionType subscriptionType);
     }
 }

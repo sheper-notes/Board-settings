@@ -19,7 +19,8 @@ public class GDPRController : ControllerBase
     private Auth0AccessTokenManager Auth0AccessTokenManager { get; set; }
     private IUserInfoUtil userInfoUtil { get; set; }
     private ILogger Logger { get; set; }
-    public GDPRController(IUserQueries userQueries, IConfiguration configuration, Auth0AccessTokenManager auth0AccessTokenManager, IUserInfoUtil userInfoUtil, ILogger logger, IBoardQueries boardQueries)
+    private IBoardDBService BoardDBService { get; set; }
+    public GDPRController(IUserQueries userQueries, IConfiguration configuration, Auth0AccessTokenManager auth0AccessTokenManager, IUserInfoUtil userInfoUtil, ILogger logger, IBoardQueries boardQueries, IBoardDBService boardDBService)
     {
         UserQueries = userQueries;
         Auth0AccessTokenManager = auth0AccessTokenManager;
@@ -27,6 +28,7 @@ public class GDPRController : ControllerBase
         this.configuration = configuration;
         Logger = logger;
         BoardQueries = boardQueries;
+        BoardDBService = boardDBService;
     }
     // DELETE api/<GDPRController>/5
     [HttpDelete("all")]
@@ -38,8 +40,6 @@ public class GDPRController : ControllerBase
             return Unauthorized();
 
         var userBoards = await BoardQueries.GetBoardsForUser(currentUser.UserId);
-        if (userBoards.Count() > 0)
-            return BadRequest("User still has data which has to be dealt with.");
 
         List<Task> tasks = new List<Task>();
 
@@ -47,7 +47,7 @@ public class GDPRController : ControllerBase
         {
             var user = board.Users.Where(x=>x.UserId == currentUser.UserId).FirstOrDefault();
 
-            tasks.Add(DeleteUser(user));
+            tasks.Add(DeleteBoard(user, board.Id));
         }
 
         await Task.WhenAll(tasks);
@@ -84,11 +84,24 @@ public class GDPRController : ControllerBase
         return Ok();
     }
 
-    private async Task DeleteUser(UserRoleRelation user)
+    [HttpGet("account")]
+    public async Task<IActionResult> GetAccount()
+    {
+        var currentUser = await userInfoUtil.GetUserInfo(HttpContext.Request.Headers["Authorization"], configuration.GetValue<string>("authURL"));
+
+        if (currentUser == null)
+            return Unauthorized();
+
+        return Ok(currentUser);
+    }
+
+    private async Task DeleteBoard(UserRoleRelation user, long boardId)
     {
         if(user.Role == Common.Enums.Role.Owner)
         {
-            await ;
+            await BoardDBService.DeleteBoard(boardId, HttpContext.Request.Headers["Authorization"]);
+            var board = await BoardQueries.GetBoardById(boardId);
+            await BoardQueries.Delete(board);
         } else
         {
             var res = await UserQueries.RemoveUser(user.BoardId, user.UserId);

@@ -6,10 +6,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
+using Common.Interfaces;
+using static System.Net.WebRequestMethods;
 
 namespace Common
 {
-    public class BoardDBService
+    public class BoardDBService : IBoardDBService
     {
 		IConfiguration Configuration { get; set; }
 
@@ -23,8 +25,8 @@ namespace Common
 			{
 				var httpClient = new HttpClient();
 				httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {jwt}");
-				var res = await httpClient.DeleteAsync($"{Configuration.GetValue<string>("boardDBServiceURL")}/boardObject/board/{id}"); 
-				res.EnsureSuccessStatusCode();
+				var res = await httpClient.DeleteAsync($"{"http://localhost:5030"}/api/boardObject/delete/{id}"); //Configuration.GetValue<string>("boardDBServiceURL")
+                res.EnsureSuccessStatusCode();
 			}
 			catch (Exception)
 			{

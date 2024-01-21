@@ -68,6 +68,16 @@ namespace API
                 return loggerFactory.CreateLogger(categoryName);
             });
             builder.Services.AddSingleton(TracerProvider.Default.GetTracer(builder.Environment.ApplicationName));
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("AllowAll",
+                    builder =>
+                    {
+                        builder.AllowAnyOrigin()
+                               .AllowAnyMethod()
+                               .AllowAnyHeader();
+                    });
+            });
 
             builder.Services.AddMemoryCache();
             builder.Services.AddControllers();
@@ -78,6 +88,7 @@ namespace API
                 options.UseNpgsql(databaseConn));
             builder.Services.AddScoped<IUserQueries, UserQueries>();
             builder.Services.AddScoped<IBoardQueries, BoardQueries>();
+            builder.Services.AddScoped<IBoardDBService,BoardDBService>();
             builder.Services.AddSingleton<Auth0AccessTokenManager>();
             builder.Services.AddIdGen(123);
             builder.Services.AddScoped<IUserInfoUtil, UserInfoUtil>();
@@ -88,6 +99,7 @@ namespace API
             var scope = app.Services.CreateScope();
             scope.ServiceProvider.GetRequiredService<Database>().Database.EnsureCreated();
             var db = scope.ServiceProvider.GetRequiredService<Database>();
+
 
 
             // Configure the HTTP request pipeline.
@@ -101,7 +113,7 @@ namespace API
             //app.UseHttpsRedirection();
 
             app.Use((context, next) => { context.Request.Scheme = "https"; return next(); });
-
+            app.UseCors("AllowAll");
 
             var cache = app.Services.GetService<IMemoryCache>();
             cache.Set("authURL", authURL);

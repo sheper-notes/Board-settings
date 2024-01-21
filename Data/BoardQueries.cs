@@ -26,7 +26,7 @@ namespace Data
 
         public async Task<IEnumerable<Board>> GetBoardsForUser(string Id)
         {
-            return await db.Boards.Where(x => x.Users.Any(y => y.UserId == Id)).ToListAsync();
+            return await db.Boards.Where(x => x.Users.Any(y => y.UserId == Id)).Include(x => x.Users).ToListAsync();
         }
 
         public async Task<IEnumerable<Board>> GetOwnedBoardsForUser(string Id)
@@ -58,6 +58,21 @@ namespace Data
             try
             {
                 var res = await db.Boards.AddAsync(board);
+                await db.SaveChangesAsync();
+                return true;
+            }
+            catch (Exception)
+            {
+
+                return false;
+            }
+        }
+
+        public async Task<bool> Delete(Board board)
+        {
+            try
+            {
+                db.Boards.Remove(board);
                 await db.SaveChangesAsync();
                 return true;
             }

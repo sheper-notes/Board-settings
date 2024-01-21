@@ -32,14 +32,18 @@ namespace API.Controllers
             var currentUser = await userInfoUtil.GetUserInfo(HttpContext.Request.Headers["Authorization"], configuration.GetValue<string>("authURL"));
 
             if (currentUser == null) return Unauthorized();
-
-            return Ok(await BoardQueries.GetBoardsForUser(currentUser.UserId));
+            var boards = await BoardQueries.GetBoardsForUser(currentUser.UserId);
+            foreach (var board in boards)
+            {
+                board.Users.ForEach(us =>  us.Board = null);
+            }
+            return Ok(boards);
         }
 
         [HttpPost]
         public async Task<IActionResult> CreateBoard(Board board)
         {
-            var currentUser = new UserInfo() { UserId = "1" }; //await userInfoUtil.GetUserInfo(HttpContext.Request.Headers["Authorization"], configuration.GetValue<string>("authURL"));
+            var currentUser = new UserInfo() { UserId = "google-oauth2|112145192005862567996" }; //await userInfoUtil.GetUserInfo(HttpContext.Request.Headers["Authorization"], configuration.GetValue<string>("authURL"));
 
             if (currentUser == null)
                 return Unauthorized("User not found");
